@@ -10,7 +10,7 @@ async function makeAdminToken(): Promise<string> {
     .join("");
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
