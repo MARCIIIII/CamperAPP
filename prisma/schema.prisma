@@ -21,6 +21,26 @@ model Slot {
   bookings      Booking[]
 }
 
+model MaintenanceEntry {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  title       String
+  description String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model ServiceRequest {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  type        String   // CLEANING | MAINTENANCE | OTHER
+  message     String
+  status      String   @default("OPEN") // OPEN | DONE
+  createdAt   DateTime @default(now())
+}
+
 // bookingType: DAILY | MONTHLY   status: PENDING | PAID | CANCELLED
 model Booking {
   id            String   @id @default(cuid())
@@ -34,6 +54,8 @@ model Booking {
   bookingType   String   @default("DAILY")
   totalPrice    Float
   status        String   @default("PENDING")
-  paypalOrderId String?
-  createdAt     DateTime @default(now())
+  paypalOrderId      String?
+  createdAt          DateTime         @default(now())
+  maintenanceEntries MaintenanceEntry[]
+  serviceRequests    ServiceRequest[]
 }
