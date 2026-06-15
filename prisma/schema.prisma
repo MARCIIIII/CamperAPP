@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// type: CAMPER | CARAVAN | GARAGE
+model Slot {
+  id            String    @id @default(cuid())
+  name          String
+  type          String    @default("CAMPER")
+  description   String?
+  pricePerDay   Float
+  pricePerMonth Float
+  accessCode    String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  bookings      Booking[]
+}
+
+// bookingType: DAILY | MONTHLY   status: PENDING | PAID | CANCELLED
+model Booking {
+  id            String   @id @default(cuid())
+  slotId        String
+  slot          Slot     @relation(fields: [slotId], references: [id])
+  guestName     String
+  guestEmail    String
+  startDate     DateTime
+  endDate       DateTime
+  bookingType   String   @default("DAILY")
+  totalPrice    Float
+  status        String   @default("PENDING")
+  paypalOrderId String?
+  createdAt     DateTime @default(now())
+}
