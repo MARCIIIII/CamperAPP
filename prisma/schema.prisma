@@ -28,6 +28,7 @@ model Booking {
   slot          Slot     @relation(fields: [slotId], references: [id])
   guestName     String
   guestEmail    String
+  guestAddress  String   @default("")
   startDate     DateTime
   endDate       DateTime
   bookingType   String   @default("DAILY")

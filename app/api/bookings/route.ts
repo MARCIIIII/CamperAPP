@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { slotId, guestName, guestEmail, startDate, endDate, bookingType, totalPrice } = body;
+  const { slotId, guestName, guestEmail, guestAddress, startDate, endDate, bookingType, totalPrice } = body;
 
   if (!slotId || !guestName || !guestEmail || !startDate || !endDate || !totalPrice) {
     return NextResponse.json({ error: "Pflichtfelder fehlen" }, { status: 400 });
@@ -16,7 +16,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Abreise muss nach Anreise liegen" }, { status: 400 });
   }
 
-  // Überschneidung prüfen
   const conflict = await prisma.booking.findFirst({
     where: {
       slotId,
@@ -34,6 +33,7 @@ export async function POST(req: Request) {
       slotId,
       guestName,
       guestEmail,
+      guestAddress: guestAddress || "",
       startDate: start,
       endDate: end,
       bookingType,
