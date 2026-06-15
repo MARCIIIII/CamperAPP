@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({ success: true });
-  res.cookies.set(ADMIN_COOKIE, makeAdminToken(), {
+  res.cookies.set(ADMIN_COOKIE, await makeAdminToken(), {
     httpOnly: true,
     sameSite: "strict",
     path: "/",

@@ -6,7 +6,7 @@ import { makeAdminToken, ADMIN_COOKIE } from "@/lib/auth";
 async function checkAdmin() {
   const jar = await cookies();
   const token = jar.get(ADMIN_COOKIE)?.value;
-  return token === makeAdminToken();
+  return token === await makeAdminToken();
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
