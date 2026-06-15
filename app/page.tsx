@@ -53,8 +53,13 @@ export default async function HomePage() {
         )}
       </section>
 
-      <footer className="text-center text-xs text-gray-400 py-8">
-        © {new Date().getFullYear()} CamperSlot · Alle Preise inkl. MwSt.
+      <footer className="text-center text-xs text-gray-400 py-8 space-y-2">
+        <p>© {new Date().getFullYear()} CamperSlot · Alle Preise inkl. MwSt.</p>
+        <p className="flex justify-center gap-4">
+          <a href="/impressum" className="hover:text-gray-600 underline underline-offset-2">Impressum</a>
+          <a href="/datenschutz" className="hover:text-gray-600 underline underline-offset-2">Datenschutz</a>
+          <a href="/agb" className="hover:text-gray-600 underline underline-offset-2">AGB</a>
+        </p>
       </footer>
     </main>
   );

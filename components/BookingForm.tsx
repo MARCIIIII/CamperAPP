@@ -19,6 +19,10 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
   const [endDate, setEndDate] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [guestStreet, setGuestStreet] = useState("");
+  const [guestCity, setGuestCity] = useState("");
+  const [agbAccepted, setAgbAccepted] = useState(false);
+  const [datenschutzAccepted, setDatenschutzAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -63,6 +67,11 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
       return;
     }
 
+    if (!agbAccepted || !datenschutzAccepted) {
+      setError("Bitte AGB und Datenschutzerklärung akzeptieren.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -72,6 +81,7 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
           slotId,
           guestName,
           guestEmail,
+          guestAddress: `${guestStreet}, ${guestCity}`,
           startDate,
           endDate,
           bookingType,
@@ -125,7 +135,7 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
         <div>
@@ -136,7 +146,7 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
@@ -150,7 +160,7 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
           onChange={(e) => setGuestName(e.target.value)}
           required
           placeholder="Max Mustermann"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
       <div>
@@ -161,8 +171,61 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
           onChange={(e) => setGuestEmail(e.target.value)}
           required
           placeholder="max@example.de"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+      </div>
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Straße und Hausnummer</label>
+        <input
+          type="text"
+          value={guestStreet}
+          onChange={(e) => setGuestStreet(e.target.value)}
+          required
+          placeholder="Musterstraße 12"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">PLZ und Ort</label>
+        <input
+          type="text"
+          value={guestCity}
+          onChange={(e) => setGuestCity(e.target.value)}
+          required
+          placeholder="12345 Berlin"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      {/* Rechtliches */}
+      <div className="space-y-3 pt-1">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agbAccepted}
+            onChange={(e) => setAgbAccepted(e.target.checked)}
+            className="mt-0.5 accent-green-600"
+          />
+          <span className="text-sm text-gray-600">
+            Ich habe die{" "}
+            <a href="/agb" target="_blank" className="text-green-700 underline">AGB</a>
+            {" "}gelesen und akzeptiere sie. Ich stimme zu, dass mein Widerrufsrecht gemäß
+            § 312g Abs. 2 Nr. 9 BGB bei Stellplatzbuchungen ausgeschlossen ist.
+          </span>
+        </label>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={datenschutzAccepted}
+            onChange={(e) => setDatenschutzAccepted(e.target.checked)}
+            className="mt-0.5 accent-green-600"
+          />
+          <span className="text-sm text-gray-600">
+            Ich habe die{" "}
+            <a href="/datenschutz" target="_blank" className="text-green-700 underline">Datenschutzerklärung</a>
+            {" "}zur Kenntnis genommen.
+          </span>
+        </label>
       </div>
 
       {/* Konflikte / Fehler */}
