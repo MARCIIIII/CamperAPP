@@ -8,13 +8,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Buchungsnummer und E-Mail erforderlich" }, { status: 400 });
   }
 
-  const booking = await prisma.booking.findFirst({
+  const candidates = await prisma.booking.findMany({
     where: {
       id: { endsWith: bookingId.toLowerCase() },
-      guestEmail: { equals: email.toLowerCase(), mode: "insensitive" },
       status: "PAID",
     },
   });
+
+  const booking = candidates.find(
+    (b) => b.guestEmail.toLowerCase() === email.toLowerCase()
+  );
 
   if (!booking) {
     return NextResponse.json({ error: "Keine Buchung gefunden. Bitte prüfe Buchungsnummer und E-Mail." }, { status: 404 });

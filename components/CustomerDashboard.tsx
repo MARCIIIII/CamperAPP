@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { de } from "date-fns/locale";
 
 type MaintenanceEntry = { id: string; title: string; description: string | null; dueDate: string | null; createdAt: string };
@@ -69,21 +69,51 @@ export default function CustomerDashboard({ booking }: { booking: BookingData })
     { key: "service", label: "Service", icon: "📞" },
   ] as const;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(booking.startDate);
+  const end = new Date(booking.endDate);
+  const daysToArrival = differenceInCalendarDays(start, today);
+  const daysToDeparture = differenceInCalendarDays(end, today);
+
+  let stayStatus: { label: string; tone: "upcoming" | "active" | "past" };
+  if (daysToDeparture < 0) stayStatus = { label: "Aufenthalt beendet", tone: "past" };
+  else if (daysToArrival <= 0) stayStatus = { label: `Vor Ort · noch ${daysToDeparture} Tag${daysToDeparture === 1 ? "" : "e"}`, tone: "active" };
+  else stayStatus = { label: `Noch ${daysToArrival} Tag${daysToArrival === 1 ? "" : "e"} bis Anreise`, tone: "upcoming" };
+
+  const STATUS_STYLE = {
+    upcoming: "bg-amber-400/20 text-amber-100",
+    active: "bg-white/20 text-white",
+    past: "bg-black/20 text-white/70",
+  };
+
+  const [copied, setCopied] = useState(false);
+  function copyCode() {
+    navigator.clipboard.writeText(booking.accessCode).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-green-700 text-white shadow">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-lg">🏕️ Mein Stellplatz</h1>
-            <p className="text-green-200 text-xs">{booking.guestName} · {booking.slotName}</p>
+      <header className="bg-gradient-to-br from-green-700 to-green-800 text-white shadow">
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="font-bold text-lg">🏕️ Mein Stellplatz</h1>
+              <p className="text-green-200 text-xs">{booking.guestName} · {booking.slotName}</p>
+            </div>
+            <a href="/mein-stellplatz" className="text-green-200 hover:text-white text-xs underline underline-offset-2">Abmelden</a>
           </div>
-          <a href="/mein-stellplatz" className="text-green-200 hover:text-white text-xs underline">Abmelden</a>
+          <span className={`inline-block text-xs font-medium px-3 py-1 rounded-full ${STATUS_STYLE[stayStatus.tone]}`}>
+            {stayStatus.label}
+          </span>
         </div>
       </header>
 
       {/* Tab-Navigation */}
-      <div className="bg-white border-b border-gray-100 shadow-sm">
+      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 flex gap-1 overflow-x-auto">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -111,10 +141,19 @@ export default function CustomerDashboard({ booking }: { booking: BookingData })
                 <div><span className="text-gray-400 text-xs block">Buchungsnr.</span><span className="font-mono font-medium text-gray-900">#{booking.id.slice(-8).toUpperCase()}</span></div>
               </div>
             </div>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-              <p className="text-xs text-green-700 font-medium mb-1">Dein Zugangscode</p>
-              <p className="text-4xl font-bold text-green-800 tracking-widest">{booking.accessCode}</p>
-              <p className="text-xs text-green-600 mt-2">Gib diesen Code am Eingang ein</p>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-green-700 font-medium mb-1">Dein Zugangscode</p>
+                <p className="text-4xl font-bold text-green-800 tracking-widest">{booking.accessCode}</p>
+                <p className="text-xs text-green-600 mt-2">Gib diesen Code am Eingang ein</p>
+              </div>
+              <button
+                onClick={copyCode}
+                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-green-200 hover:bg-green-100 text-green-700 transition-colors"
+                title="Code kopieren"
+              >
+                {copied ? "✓" : "⧉"}
+              </button>
             </div>
           </>
         )}

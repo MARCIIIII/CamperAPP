@@ -1,16 +1,28 @@
 import { prisma } from "@/lib/prisma";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 
 export const revalidate = 0;
 
+const GUEST_COLORS = ["bg-blue-500", "bg-purple-500", "bg-amber-500", "bg-pink-500", "bg-teal-500", "bg-indigo-500"];
+function guestColor(name: string) {
+  const idx = name.charCodeAt(0) % GUEST_COLORS.length;
+  return GUEST_COLORS[idx];
+}
+
 export default async function DashboardPage() {
-  const [totalSlots, totalBookings, paidBookings, pendingBookings] = await Promise.all([
+  const [totalSlots, occupiedSlots, paidBookings, pendingBookings] = await Promise.all([
     prisma.slot.count({ where: { isActive: true } }),
-    prisma.booking.count(),
+    prisma.booking.groupBy({
+      by: ["slotId"],
+      where: { status: "PAID", startDate: { lte: new Date() }, endDate: { gte: new Date() } },
+    }),
     prisma.booking.findMany({ where: { status: "PAID" } }),
     prisma.booking.count({ where: { status: "PENDING" } }),
   ]);
 
   const revenue = paidBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+  const occupancyRate = totalSlots > 0 ? Math.round((occupiedSlots.length / totalSlots) * 100) : 0;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -34,21 +46,37 @@ export default async function DashboardPage() {
   const serviceRequests = await prisma.serviceRequest.count({ where: { status: "OPEN" } });
 
   const stats = [
-    { label: "Aktive Stellplätze", value: totalSlots, icon: "🅿️", color: "bg-blue-900/40 border-blue-800" },
-    { label: "Gesamteinnahmen", value: `${revenue.toFixed(2)} €`, icon: "💰", color: "bg-green-900/40 border-green-800" },
-    { label: "Heutige Anreisen", value: arrivals, icon: "🚐", color: "bg-amber-900/40 border-amber-800" },
-    { label: "Heutige Abreisen", value: departures, icon: "👋", color: "bg-purple-900/40 border-purple-800" },
-    { label: "Offene Service-Anfragen", value: serviceRequests, icon: "🔧", color: "bg-red-900/40 border-red-800" },
-    { label: "Ausstehende Zahlungen", value: pendingBookings, icon: "⏳", color: "bg-gray-800 border-gray-700" },
+    { label: "Belegungsrate", value: `${occupancyRate}%`, icon: "📊", accent: "from-teal-500/20 to-teal-500/5 border-teal-800/60" },
+    { label: "Gesamteinnahmen", value: `${revenue.toFixed(2)} €`, icon: "💰", accent: "from-green-500/20 to-green-500/5 border-green-800/60" },
+    { label: "Heutige Anreisen", value: arrivals, icon: "🚐", accent: "from-amber-500/20 to-amber-500/5 border-amber-800/60" },
+    { label: "Heutige Abreisen", value: departures, icon: "👋", accent: "from-purple-500/20 to-purple-500/5 border-purple-800/60" },
+    { label: "Offene Service-Anfragen", value: serviceRequests, icon: "🔧", accent: "from-red-500/20 to-red-500/5 border-red-800/60" },
+    { label: "Ausstehende Zahlungen", value: pendingBookings, icon: "⏳", accent: "from-gray-500/10 to-gray-500/5 border-gray-700" },
+  ];
+
+  const QUICK_ACTIONS = [
+    { href: "/admin/slots", label: "+ Neuer Stellplatz" },
+    { href: "/admin/bookings", label: "Alle Buchungen" },
   ];
 
   return (
     <div className="max-w-5xl">
-      <h1 className="text-2xl font-bold text-white mb-6">Dashboard</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <div className="flex gap-2">
+          {QUICK_ACTIONS.map((a) => (
+            <a key={a.href} href={a.href}
+              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition-colors">
+              {a.label}
+            </a>
+          ))}
+        </div>
+      </div>
+      <p className="text-sm text-gray-500 mb-6 capitalize">{format(today, "EEEE, dd. MMMM yyyy", { locale: de })}</p>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {stats.map((s) => (
-          <div key={s.label} className={`rounded-xl border p-4 ${s.color}`}>
+          <div key={s.label} className={`rounded-xl border bg-gradient-to-br ${s.accent} p-4`}>
             <div className="text-2xl mb-2">{s.icon}</div>
             <div className="text-2xl font-bold text-white">{s.value}</div>
             <div className="text-xs text-gray-400 mt-1">{s.label}</div>
@@ -73,7 +101,14 @@ export default async function DashboardPage() {
           <tbody>
             {recentBookings.map((b) => (
               <tr key={b.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                <td className="px-5 py-3 text-white">{b.guestName}</td>
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-7 h-7 rounded-full ${guestColor(b.guestName)} flex items-center justify-center text-xs font-semibold text-white shrink-0`}>
+                      {b.guestName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="text-white">{b.guestName}</span>
+                  </div>
+                </td>
                 <td className="px-5 py-3 text-gray-400">{b.slot.name}</td>
                 <td className="px-5 py-3 text-gray-400 text-xs">
                   {new Date(b.startDate).toLocaleDateString("de")} – {new Date(b.endDate).toLocaleDateString("de")}
