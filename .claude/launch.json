@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "assekuranz-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/mcsk1/OneDrive/Claude/assekuranz-ai-demo", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "camperapp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/mcsk1/OneDrive/Claude/CamperAPP", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { differenceInDays, differenceInMonths, format } from "date-fns";
 import { de } from "date-fns/locale";
+import AvailabilityCalendar from "./AvailabilityCalendar";
 
 type Props = {
   slotId: string;
@@ -125,30 +126,22 @@ export default function BookingForm({ slotId, pricePerDay, pricePerMonth, booked
         ))}
       </div>
 
-      {/* Daten */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Anreise</label>
-          <input
-            type="date"
-            min={today}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Abreise</label>
-          <input
-            type="date"
-            min={startDate || today}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
+      {/* Kalender */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-2">Zeitraum wählen</label>
+        <AvailabilityCalendar
+          bookedRanges={bookedRanges}
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(s, e) => { setStartDate(s); setEndDate(e); }}
+        />
+        {startDate && (
+          <p className="text-xs text-gray-500 mt-2 px-1">
+            Anreise: <strong className="text-gray-800">{format(new Date(startDate), "dd. MMM yyyy", { locale: de })}</strong>
+            {endDate && <> · Abreise: <strong className="text-gray-800">{format(new Date(endDate), "dd. MMM yyyy", { locale: de })}</strong></>}
+            {!endDate && <span className="text-green-600"> · Bitte Abreisetag wählen</span>}
+          </p>
+        )}
       </div>
 
       {/* Gast */}
