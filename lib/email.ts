@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { escapeHtml } from "./html";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -55,19 +56,19 @@ export async function sendBookingConfirmation(params: BookingEmailParams) {
     <p>Dein Stellplatz ist gebucht und bezahlt</p>
   </div>
   <div class="body">
-    <p>Hallo <strong>${guestName}</strong>,</p>
+    <p>Hallo <strong>${escapeHtml(guestName)}</strong>,</p>
     <p>vielen Dank für deine Buchung! Hier ist dein persönlicher Zugangscode für das Grundstück:</p>
 
     <div class="code-box">
       <div class="label">Dein Zugangscode</div>
-      <div class="code">${accessCode}</div>
+      <div class="code">${escapeHtml(accessCode)}</div>
       <div style="font-size:13px;color:#6b7280;">Gib diesen Code am Eingang ein</div>
     </div>
 
     <div class="details">
       <table>
         <tr><td>Buchungsnr.</td><td>#${bookingId.slice(-8).toUpperCase()}</td></tr>
-        <tr><td>Stellplatz</td><td>${slotName}</td></tr>
+        <tr><td>Stellplatz</td><td>${escapeHtml(slotName)}</td></tr>
         <tr><td>Anreise</td><td>${fmt(startDate)}</td></tr>
         <tr><td>Abreise</td><td>${fmt(endDate)}</td></tr>
         <tr><td>Bezahlter Betrag</td><td>${totalPrice.toFixed(2)} €</td></tr>

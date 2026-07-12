@@ -1,11 +1,19 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import CustomerDashboard from "@/components/CustomerDashboard";
+import { verifyCustomerSession } from "@/lib/auth";
 
 export default async function CustomerPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
+
+  // Die bookingId allein darf kein gültiger Schlüssel sein — ohne das beim
+  // Login gesetzte Session-Cookie könnte jeder, der eine ID errät oder aus
+  // dem Browserverlauf kennt, fremde Zugangscodes einsehen (Fund #4).
+  if (!(await verifyCustomerSession(bookingId))) {
+    redirect("/mein-stellplatz");
+  }
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId, status: "PAID" },

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyCustomerSession } from "@/lib/auth";
+import { escapeHtml } from "@/lib/html";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -8,6 +10,9 @@ export async function POST(req: Request) {
   const { bookingId, type, message } = await req.json();
   if (!bookingId || !type || !message) {
     return NextResponse.json({ error: "Pflichtfelder fehlen" }, { status: 400 });
+  }
+  if (!(await verifyCustomerSession(bookingId))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const booking = await prisma.booking.findUnique({
@@ -28,11 +33,11 @@ export async function POST(req: Request) {
     subject: `🔧 Service-Anfrage: ${TYPE_LABEL[type] || type} – ${booking.slot.name}`,
     html: `
       <h2>Neue Service-Anfrage</h2>
-      <p><strong>Gast:</strong> ${booking.guestName} (${booking.guestEmail})</p>
-      <p><strong>Stellplatz:</strong> ${booking.slot.name}</p>
-      <p><strong>Typ:</strong> ${TYPE_LABEL[type] || type}</p>
+      <p><strong>Gast:</strong> ${escapeHtml(booking.guestName)} (${escapeHtml(booking.guestEmail)})</p>
+      <p><strong>Stellplatz:</strong> ${escapeHtml(booking.slot.name)}</p>
+      <p><strong>Typ:</strong> ${escapeHtml(TYPE_LABEL[type] || type)}</p>
       <p><strong>Nachricht:</strong></p>
-      <blockquote style="border-left:3px solid #15803d;padding-left:12px;color:#555">${message}</blockquote>
+      <blockquote style="border-left:3px solid #15803d;padding-left:12px;color:#555">${escapeHtml(message)}</blockquote>
       <hr>
       <p style="font-size:12px;color:#999">Buchungs-ID: ${booking.id}</p>
     `,

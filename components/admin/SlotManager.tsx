@@ -34,7 +34,7 @@ export default function SlotManager({ initialSlots }: { initialSlots: Slot[] }) 
     } else {
       const res = await fetch("/api/slots", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-password": "" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       if (res.ok) { const s = await res.json(); setSlots([...slots, s]); }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAdminAuthed } from "@/lib/auth";
 
 export async function GET() {
   const slots = await prisma.slot.findMany({
@@ -10,8 +11,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const auth = req.headers.get("x-admin-password");
-  if (auth !== process.env.ADMIN_PASSWORD) {
+  if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

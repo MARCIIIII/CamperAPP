@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { makeCustomerToken, CUSTOMER_COOKIE } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const { bookingId, email } = await req.json();
@@ -23,5 +24,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Keine Buchung gefunden. Bitte prüfe Buchungsnummer und E-Mail." }, { status: 404 });
   }
 
-  return NextResponse.json({ bookingId: booking.id });
+  const res = NextResponse.json({ bookingId: booking.id });
+  res.cookies.set(CUSTOMER_COOKIE, `${booking.id}:${await makeCustomerToken(booking.id)}`, {
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30, // 30 Tage
+  });
+  return res;
 }
