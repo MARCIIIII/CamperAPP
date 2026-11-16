@@ -1,0 +1,24 @@
+[project]
+name = "tradingbot"
+version = "0.1.0"
+description = "Automatisiertes Trading für Aktien und CFDs: Backtest, Paper-Trading, Interactive Brokers"
+requires-python = ">=3.10"
+dependencies = ["pandas>=2.0", "numpy>=1.24", "pydantic>=2.0", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+yahoo = ["yfinance>=0.2"]
+ibkr = ["ib_async>=2.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+tradingbot = "tradingbot.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tradingbot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

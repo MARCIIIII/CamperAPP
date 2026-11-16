@@ -1,0 +1,81 @@
+# Standardkonfiguration. Alle Instrumente werden in Kontowährung angenommen
+# (Währungsumrechnung ist noch nicht eingebaut, siehe docs/KONZEPT.md).
+initial_capital: 10000
+currency: USD
+state_file: state/session.json
+
+risk:
+  risk_per_trade: 0.005      # 0,5 % des Kontowerts je Trade
+  max_gross_leverage: 2.0    # Summe aller Positionswerte / Kontowert
+  max_margin_usage: 0.4      # höchstens 40 % des Kontowerts als Margin gebunden
+  max_positions: 10
+  daily_loss_limit: 0.02     # ab -2 % am Tag: keine neuen Positionen
+  max_drawdown: 0.15         # ab -15 % vom Höchststand: alles schließen, Handel gesperrt
+
+costs:
+  stock_commission_bps: 5
+  stock_commission_min: 1.0
+  cfd_commission_bps: 1
+  cfd_financing_long: 0.065  # p.a. auf den Positionswert
+  cfd_financing_short: 0.01
+  margin_closeout_level: 0.5 # ESMA: Zwangsschließung bei 50 % der Margin
+
+data:
+  provider: yahoo            # csv | yahoo | synthetic
+  csv_dir: data
+  start: "2012-01-01"
+
+ibkr:
+  host: 127.0.0.1
+  port: 4002                 # IB Gateway Paper. 4001 Gateway live, 7497 TWS Paper, 7496 TWS live
+  client_id: 17
+  history_days: 400
+
+strategies:
+  trend:
+    type: trend
+    lookbacks: [63, 126, 252]
+    threshold: 0.3
+    stop_atr: 3.0
+  dip:
+    type: mean_reversion
+    rsi_entry: 10
+    max_hold: 10
+    stop_atr: 2.5
+
+instruments:
+  # Trendfolge long/short über CFDs. margin_rate nach ESMA: Hauptindizes 5 %, Gold 5 %, Einzelaktien 20 %.
+  - symbol: US500
+    kind: cfd
+    strategy: trend
+    margin_rate: 0.05
+    qty_step: 0.01
+    spread_bps: 1
+    broker_ref: {yahoo: "^GSPC", ibkr: {symbol: IBUS500, currency: USD}}
+  - symbol: USTECH
+    kind: cfd
+    strategy: trend
+    margin_rate: 0.05
+    qty_step: 0.01
+    spread_bps: 1.5
+    broker_ref: {yahoo: "^NDX", ibkr: {symbol: IBUST100, currency: USD}}
+  - symbol: GOLD
+    kind: cfd
+    strategy: trend
+    margin_rate: 0.05
+    qty_step: 0.01
+    spread_bps: 2
+    broker_ref: {yahoo: "GC=F", ibkr: {symbol: XAUUSD, sec_type: CMDTY, currency: USD}}
+  - symbol: NVDA
+    kind: cfd
+    strategy: trend
+    margin_rate: 0.2
+    spread_bps: 3
+    broker_ref: {ibkr: {symbol: NVDA, currency: USD, data: {symbol: NVDA, sec_type: STK, currency: USD}}}
+
+  # Mean-Reversion nur long mit echten Aktien, ohne Hebel.
+  - {symbol: AAPL, kind: stock, strategy: dip}
+  - {symbol: MSFT, kind: stock, strategy: dip}
+  - {symbol: JPM, kind: stock, strategy: dip}
+  - {symbol: XOM, kind: stock, strategy: dip}
+  - {symbol: JNJ, kind: stock, strategy: dip}
